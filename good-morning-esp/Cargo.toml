@@ -35,7 +35,7 @@ embedded-graphics-core = "0.3.3"
 embedded-hal = "1.0.0"
 serde = { version = "1.0.215", features = ["derive"] }
 # epd-waveshare = "0.6.0"
-epd-waveshare = { path = "../epd-waveshare" }
+epd-waveshare = { git = "https://github.com/caemor/epd-waveshare.git" }
 good-morning-lib = { path = "../good-morning-lib" }
 chrono = { version = "0.4.39", features = ["serde"] }
 esp-idf-sys = "0.35.0"

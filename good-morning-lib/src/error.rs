@@ -6,4 +6,6 @@ pub enum BadMorning {
     SntpTimeout,
     MetoResponseFormat(String),
     HttpConnection,
+    CalendarProxyOffline,
+    CalendarProxyUnexpected,
 }
