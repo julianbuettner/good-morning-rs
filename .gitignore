@@ -1,0 +1,11 @@
+# env
+*.env
+
+# My private testing calendar
+private.ics
+
+*.bmp
+
+# Build
+**/target
+**/.embuild
