@@ -1,10 +1,7 @@
 use chrono::{Datelike, NaiveDateTime, Timelike};
 use embedded_graphics::image::Image;
 use embedded_graphics::prelude::DrawTarget;
-use embedded_graphics::{
-    pixelcolor::BinaryColor,
-    prelude::*,
-};
+use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 use ical_property::{DateMaybeTime, Event};
 use tinybmp::Bmp;
 use u8g2_fonts::{
@@ -17,6 +14,7 @@ use u8g2_fonts::{
     FontRenderer,
 };
 
+use crate::calendar::BasicEvent;
 use crate::weather::{EasyWeather, OpenMeteoPrediction};
 
 // Big Clock and Date
@@ -39,7 +37,7 @@ const MINI_CELCIUS_HEIGHT: i32 = 370;
 pub struct DrawData {
     pub weather: OpenMeteoPrediction,
     pub datetime: NaiveDateTime,
-    pub events_today: Vec<Event>,
+    pub events_today: Vec<BasicEvent>,
 }
 
 const FONT_COLOR: BinaryColor = BinaryColor::Off;
@@ -90,25 +88,12 @@ impl Drawable for DrawData {
 
         // Events
         let mut events = self.events_today.clone();
-        // TODO without start?
-        events.sort_by_key(|e| match e.start.as_ref().unwrap() {
-            DateMaybeTime::DateTime(d) => Some(d.clone()),
-            DateMaybeTime::Date(_) => None,
-        });
+        events.sort_by_key(|e| e.time);
         let event_lines = events
             .iter()
-            .filter(|e| e.summary.is_some())
-            .filter(|e| e.start.is_some())
-            .map(|e| match e.start.as_ref().unwrap() {
-                DateMaybeTime::DateTime(dt) => {
-                    format!(
-                        "{}:{}  {}",
-                        dt.hour(),
-                        dt.minute(),
-                        e.summary.as_ref().unwrap()
-                    )
-                }
-                DateMaybeTime::Date(_) => format!("Ganzt. {}", e.summary.as_ref().unwrap()),
+            .map(|e| match &e.time {
+                None => format!("Ganzt. {}", e.summary),
+                Some(t) => format!("{:02}:{:02}  {}", t.hour(), t.minute(), e.summary)
             });
         for (i, line) in event_lines.enumerate() {
             very_small_font

@@ -28,7 +28,7 @@ use esp_idf_svc::{
     nvs::EspDefaultNvsPartition,
     sntp::{EspSntp, SyncStatus},
 };
-use good_morning_lib::{BadMorning, DrawData};
+use good_morning_lib::{calendar::BasicEvent, BadMorning, DrawData};
 use ical_property::{DateMaybeTime, Event};
 use query_weather::query_weather;
 use time::{time_from_internet, TimeSync};
@@ -94,11 +94,6 @@ fn routine() -> Result<(), BadMorning> {
     // Start Time Sync
     eprintln!("Sync time.");
     let time_sync = TimeSync::new()?;
-    // Wait for time sync
-    // time_sync.block_timeout(Duration::from_secs(20))?;
-    // println!("Connected to wifi and time is synced.");
-
-    // return Ok(());
 
     let sl = |s| {
         eprintln!("Sleep {}s", s);
@@ -112,15 +107,20 @@ fn routine() -> Result<(), BadMorning> {
             "Weather and datetime fetched. Temp: {}°C, now {}",
             weather.current.temperature_2m, now,
         );
-        // let now = time_from_internet()?;
+        let events_today = query_calendar::get_events().unwrap_or(vec![BasicEvent {
+            summary: "Kalender reparieren".to_string(),
+            time: None,
+        }]);
         let draw_data = DrawData {
-            events_today: query_calendar::get_events()?,
+            events_today,
             weather,
             datetime: now.with_timezone(&Berlin).naive_local(),
         };
 
         eprintln!("Draw something to buffer.");
-        draw_data.draw(&mut display_raw.color_converted::<BinaryColor>()).unwrap();
+        draw_data
+            .draw(&mut display_raw.color_converted::<BinaryColor>())
+            .unwrap();
         sl(1);
 
         eprintln!("Update SRM.");

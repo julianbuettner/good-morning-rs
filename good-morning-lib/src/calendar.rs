@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 const MAX_EVENT_ITER: usize = 10_000_000;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BasicEvent {
     pub summary: String,
     pub time: Option<NaiveTime>,
