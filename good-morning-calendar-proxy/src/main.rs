@@ -1,5 +1,5 @@
 use axum::{debug_handler, routing::post, Json, Router};
-use chrono::Local;
+use chrono::{Duration, Local};
 use good_morning_lib::calendar::BasicEvent;
 use ical_property::DateMaybeTime;
 
@@ -30,7 +30,8 @@ async fn ical_proxy(body: String) -> Result<Json<Vec<BasicEvent>>, String> {
         events.push(BasicEvent {
             summary: e.summary.ok_or("Event without summray".to_string())?,
             time: match e.start.ok_or("Event without start".to_string())? {
-                DateMaybeTime::DateTime(dt) => Some(dt.naive_local().time()),
+                // Look. Idk why the time offset is here. But it is.
+                DateMaybeTime::DateTime(dt) => Some(dt.naive_local().time() + Duration::hours(1)),
                 DateMaybeTime::Date(_) => None,
             },
         });

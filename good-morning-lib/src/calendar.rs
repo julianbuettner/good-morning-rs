@@ -23,7 +23,7 @@ pub fn events_at_date(events: impl Iterator<Item = Event>, date: NaiveDate) -> V
             //     event.start.as_ref().unwrap()
             // );
             for start in rr_event_starts_at_date(&event, date) {
-                println!("Keep event {}", event.summary.as_ref().unwrap());
+                println!("Keep recurring event {:?}", event);
                 result.push(Event {
                     summary: event.summary.clone(),
                     start: Some(DateMaybeTime::DateTime(start.to_utc())),
@@ -37,7 +37,7 @@ pub fn events_at_date(events: impl Iterator<Item = Event>, date: NaiveDate) -> V
             //     event.start.as_ref().unwrap()
             // );
             if event_at_date(&event, date) {
-                println!("Keep event {}", event.summary.as_ref().unwrap());
+                println!("Keep one time event {:?}", event);
                 result.push(event.clone());
             }
         }
@@ -69,6 +69,7 @@ pub fn rr_event_starts_at_date(
         .take(MAX_EVENT_ITER)
         .take_while(move |event| event.naive_local().date() <= date)
         .skip_while(move |event| event.naive_local().date() < date2)
+        .inspect(|e| println!("Check {:?}", e))
 }
 
 pub fn filter_map_events(events: impl Iterator<Item = IcalEvent>) -> impl Iterator<Item = Event> {
