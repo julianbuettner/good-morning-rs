@@ -40,9 +40,10 @@ pub fn get_events() -> Result<Vec<BasicEvent>, BadMorning> {
         .ok()
         .ok_or(BadMorning::CalendarProxyOffline)?;
     let mut response = request.submit().unwrap();
-    let mut buffer = vec![0u8; BUFFER_SIZE_KB];
+    let mut buffer = vec![0u8; BUFFER_SIZE_KB * 1024];
     let read = try_read_full(&mut response, &mut buffer).map_err(|_| BadMorning::HttpConnection)?;
     let response_body = String::from_utf8_lossy(&buffer[..read]).into_owned();
+    println!("Calendar response: {:?}", response_body);
     let calendar_result: Result<Vec<BasicEvent>, BadMorning> = serde_json::from_str(&response_body)
         .ok()
         .ok_or(BadMorning::CalendarProxyUnexpected);

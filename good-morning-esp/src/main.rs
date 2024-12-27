@@ -1,6 +1,8 @@
 use std::{borrow::Borrow, sync::Arc, thread::sleep, time::Duration};
 
-use chrono::{Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+use chrono::{
+    Date, DateTime, Duration as ChronoDur, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc
+};
 use chrono_tz::{Europe::Berlin, Tz};
 // use display::display_something;
 use embedded_graphics::{
@@ -40,6 +42,7 @@ mod time;
 mod wifi;
 
 const TZ: Tz = Berlin;
+const REFRESH_RATE: i64 = 500;
 
 fn blink(pin: impl OutputPin) {
     let mut d = PinDriver::output(pin).unwrap();
@@ -47,6 +50,17 @@ fn blink(pin: impl OutputPin) {
         d.toggle().unwrap();
         sleep(Duration::from_millis(250));
     }
+}
+
+fn duration_to_next_refresh(now: DateTime<Utc>) -> Duration {
+    let now_sec = now.timestamp();
+    let next_sec = (now_sec / REFRESH_RATE) * REFRESH_RATE + REFRESH_RATE;
+    let next: DateTime<Utc> = DateTime::from_timestamp(next_sec, 0).unwrap();
+    println!("Now {:?}", now);
+    println!("Sleep until {}", next_sec);
+    println!("Sleep until {:?}", next);
+    let dif = next - now;
+    Duration::from_millis(dif.num_seconds() as u64)
 }
 
 fn routine() -> Result<(), BadMorning> {
@@ -82,9 +96,6 @@ fn routine() -> Result<(), BadMorning> {
     let mut delay = Delay::new_default();
     let mut epd =
         Epd7in5::new(&mut spi_device_driver, busy, dc, rst, &mut delay, delay_us).unwrap();
-    let mut display_raw = Box::new(Display7in5::default());
-    // let mut display = display_raw.color_converted::<BinaryColor>();
-
     // Datetime
     eprintln!("Connect to wifi.");
     let timeout = Duration::from_secs(15);
@@ -101,6 +112,7 @@ fn routine() -> Result<(), BadMorning> {
     };
 
     loop {
+        let mut display_raw = Box::new(Display7in5::default());
         eprintln!("Fetch weather with datetime...");
         let (weather, now) = query_weather()?;
         eprintln!(
@@ -136,7 +148,11 @@ fn routine() -> Result<(), BadMorning> {
         eprintln!("Sleep EPD");
         epd.sleep(&mut spi_device_driver, &mut delay).unwrap();
 
-        sl(300);
+        let mut sleep_duration = duration_to_next_refresh(now);
+        if sleep_duration < Duration::from_secs(60) {
+            sleep_duration += Duration::from_secs(REFRESH_RATE as u64)
+        }
+        sleep(sleep_duration - Duration::from_secs(3));
 
         eprintln!("Wake Up");
         epd.wake_up(&mut spi_device_driver, &mut delay).unwrap();
