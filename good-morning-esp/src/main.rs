@@ -42,7 +42,16 @@ mod time;
 mod wifi;
 
 const TZ: Tz = Berlin;
-const REFRESH_RATE: i64 = 500;
+const REFRESH_RATE: i64 = 300;
+
+fn get_refresh_rate(now: &DateTime<Utc>) -> Duration {
+    let now = now.naive_local().time();
+    let h = |h| NaiveTime::from_hms_opt(h, 0, 0).unwrap();
+    if (h(0)..h(6)).contains(&now) {
+        return Duration::from_secs(1800);
+    }
+    Duration::from_secs(300)
+}
 
 fn blink(pin: impl OutputPin) {
     let mut d = PinDriver::output(pin).unwrap();
@@ -53,14 +62,19 @@ fn blink(pin: impl OutputPin) {
 }
 
 fn duration_to_next_refresh(now: DateTime<Utc>) -> Duration {
+    let refresh_rate_sec = get_refresh_rate(&now).as_secs() as i64;
     let now_sec = now.timestamp();
-    let next_sec = (now_sec / REFRESH_RATE) * REFRESH_RATE + REFRESH_RATE;
+    let next_sec = (now_sec / refresh_rate_sec) * refresh_rate_sec + refresh_rate_sec;
     let next: DateTime<Utc> = DateTime::from_timestamp(next_sec, 0).unwrap();
+    println!("Cooldown {}", refresh_rate_sec);
+    println!("Now {:?}", now.timestamp());
     println!("Now {:?}", now);
     println!("Sleep until {}", next_sec);
     println!("Sleep until {:?}", next);
     let dif = next - now;
-    Duration::from_millis(dif.num_seconds() as u64)
+    let res = Duration::from_secs(dif.num_seconds() as u64);
+    println!("Sleep {}s", res.as_secs());
+    res
 }
 
 fn routine() -> Result<(), BadMorning> {
@@ -150,6 +164,7 @@ fn routine() -> Result<(), BadMorning> {
 
         let mut sleep_duration = duration_to_next_refresh(now);
         if sleep_duration < Duration::from_secs(60) {
+            println!("Sleep extra {}s", REFRESH_RATE);
             sleep_duration += Duration::from_secs(REFRESH_RATE as u64)
         }
         sleep(sleep_duration - Duration::from_secs(3));
