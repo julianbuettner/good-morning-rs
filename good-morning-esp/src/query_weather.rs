@@ -11,14 +11,15 @@ use good_morning_lib::BadMorning;
 
 const BUFFER_SIZE_KB: usize = 32;
 
-const LONG: &str = dotenv!("LONG");
-const LAT: &str = dotenv!("LAT");
-const TIMEZONE: &str = dotenv!("TIMEZONE");
+// To calulate minutes to decimal, divide by 60, multiply by 100
+const LONG: &str = dotenv!("LONG"); // East / West
+const LAT: &str = dotenv!("LAT"); // North / South
+const TIMEZONE: &str = dotenv!("TIMEZONE");  // E.g. "Europe/Berlin"
 
 pub fn query_weather() -> Result<(OpenMeteoPrediction, DateTime<Utc>), BadMorning> {
     let mut client = Client::wrap(
         EspHttpConnection::new(&Configuration {
-            crt_bundle_attach: Some(esp_idf_sys::esp_crt_bundle_attach),
+            crt_bundle_attach: Some(esp_idf_hal::sys::esp_crt_bundle_attach),
             ..Default::default()
         })
         .unwrap(),

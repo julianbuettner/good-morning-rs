@@ -40,7 +40,7 @@ pub fn time_from_internet() -> Result<DateTime<Utc>, BadMorning> {
     let url = datetime::get_http_url();
     let mut client = Client::wrap(
         EspHttpConnection::new(&Configuration {
-            crt_bundle_attach: Some(esp_idf_sys::esp_crt_bundle_attach),
+            crt_bundle_attach: Some(esp_idf_hal::sys::esp_crt_bundle_attach),
             ..Default::default()
         })
         .unwrap(),

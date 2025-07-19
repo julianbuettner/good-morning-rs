@@ -18,7 +18,7 @@ const BUFFER_SIZE_KB: usize = 4;
 pub fn get_events() -> Result<Vec<BasicEvent>, BadMorning> {
     let mut client = Client::wrap(
         EspHttpConnection::new(&Configuration {
-            crt_bundle_attach: Some(esp_idf_sys::esp_crt_bundle_attach),
+            crt_bundle_attach: Some(esp_idf_hal::sys::esp_crt_bundle_attach),
             ..Default::default()
         })
         .unwrap(),
