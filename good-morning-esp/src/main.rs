@@ -1,7 +1,8 @@
 use std::{borrow::Borrow, sync::Arc, thread::sleep, time::Duration};
 
 use chrono::{
-    Date, DateTime, Duration as ChronoDur, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc
+    Date, DateTime, Duration as ChronoDur, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone,
+    Utc,
 };
 use chrono_tz::{Europe::Berlin, Tz};
 // use display::display_something;
@@ -110,6 +111,12 @@ fn routine() -> Result<(), BadMorning> {
     let mut delay = Delay::new_default();
     let mut epd =
         Epd7in5::new(&mut spi_device_driver, busy, dc, rst, &mut delay, delay_us).unwrap();
+
+    // Flush the display white at start, so that user can disconnect display and store it
+    epd.clear_frame(&mut spi_device_driver, &mut delay)
+        .expect("Failed to clear frame");
+    sleep(Duration::from_secs(2));
+
     // Datetime
     eprintln!("Connect to wifi.");
     let timeout = Duration::from_secs(15);
